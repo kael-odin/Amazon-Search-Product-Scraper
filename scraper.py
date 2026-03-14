@@ -302,6 +302,7 @@ async def _scrape_keyword(
 async def run_scraper(
     input_dict: Dict[str, Any],
     *,
+    browser_cdp_url: Optional[str] = None,
     launch_browser_kwargs: Optional[Dict[str, Any]] = None,
     proxy: Optional[str] = None,
     log: Any = None,
@@ -320,56 +321,38 @@ async def run_scraper(
         push_data = lambda x: None
     parsed = normalize_input(input_dict)
     log.info(f"Input: keywords={parsed.keywords}, max_pages={parsed.max_pages}, country={parsed.country}")
-    launch_kwargs = dict(launch_browser_kwargs or {})
-    launch_kwargs.setdefault("headless", True)
-    launch_kwargs.setdefault("args", ["--disable-gpu"])
     locale = {"US": "en-US", "UK": "en-GB", "DE": "de-DE", "FR": "fr-FR", "JP": "ja-JP"}.get(parsed.country, "en-US")
-
-    # Prefer system Chromium/Chrome if present (many images have it; Playwright install often fails without network)
-    import shutil
-    for name in ("chromium", "chromium-browser", "google-chrome", "google-chrome-stable", "chrome"):
-        path = shutil.which(name)
-        if path:
-            launch_kwargs["executable_path"] = path
-            log.info(f"Using system browser: {path}")
-            break
-    if "executable_path" not in launch_kwargs:
-        import subprocess
-        import sys
-        browsers_dir = "/tmp/playwright_browsers"
-        os.environ["PLAYWRIGHT_BROWSERS_PATH"] = browsers_dir
-        try:
-            r = subprocess.run(
-                [sys.executable, "-m", "playwright", "install", "chromium"],
-                env={**os.environ, "PLAYWRIGHT_BROWSERS_PATH": browsers_dir},
-                capture_output=True,
-                timeout=180,
-                check=False,
-            )
-            if r.returncode == 0:
-                log.info("Playwright Chromium install OK")
-            else:
-                log.warning(f"Playwright install exit {r.returncode}; stderr: {(r.stderr or b'').decode()[:500]}")
-        except Exception as e:
-            log.warning(f"Playwright install attempt failed: {e}")
-
-    async with async_playwright() as p:
-        try:
-            browser = await p.chromium.launch(**launch_kwargs)
-        except Exception as e:
-            err = str(e)
-            if "Executable doesn't exist" in err or "playwright install" in err.lower():
-                log.exception(
-                    "Chromium not found. Ask CafeScraper support to run 'playwright install chromium' before tasks or use an image with Chromium/Chrome installed."
-                )
-            raise
-        ctx_opts = {
-            "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36",
-            "locale": locale,
-            "viewport": {"width": 1366, "height": 768},
-        }
+    ctx_opts: Dict[str, Any] = {
+        "locale": locale,
+        "viewport": {"width": 1366, "height": 768},
+    }
+    if not browser_cdp_url:
+        ctx_opts["user_agent"] = (
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36"
+        )
         if proxy:
             ctx_opts["proxy"] = {"server": proxy}
+
+    async with async_playwright() as p:
+        if browser_cdp_url:
+            log.info("Connecting to CafeScraper fingerprint browser via CDP")
+            try:
+                browser = await p.chromium.connect_over_cdp(browser_cdp_url)
+            except Exception as e:
+                log.exception(f"Failed to connect to fingerprint browser: {e}")
+                raise
+        else:
+            launch_kwargs = dict(launch_browser_kwargs or {})
+            launch_kwargs.setdefault("headless", True)
+            launch_kwargs.setdefault("args", ["--disable-gpu"])
+            import shutil
+            for name in ("chromium", "chromium-browser", "google-chrome", "google-chrome-stable", "chrome"):
+                path = shutil.which(name)
+                if path:
+                    launch_kwargs["executable_path"] = path
+                    log.info(f"Using system browser: {path}")
+                    break
+            browser = await p.chromium.launch(**launch_kwargs)
         context = await browser.new_context(**ctx_opts)
         try:
             for keyword in parsed.keywords:

@@ -75,11 +75,13 @@ async def run():
             CafeSDK.Log.info("No keywords in input; using default keywords and settings.")
         CafeSDK.Log.debug(f"params: {input_json_dict}")
 
-        proxy_domain = "proxy-inner.cafescraper.com:6000"
-        proxy_auth = os.environ.get("PROXY_AUTH")
-        proxy_url = f"socks5://{proxy_auth}@{proxy_domain}" if proxy_auth else None
-        if proxy_url:
-            CafeSDK.Log.info("Using proxy for browser")
+        # CafeScraper: connect to remote fingerprint browser via CDP (no local Chromium needed)
+        auth = os.environ.get("PROXY_AUTH")
+        browser_cdp_url = f"ws://{auth}@chrome-ws-inner.cafescraper.com" if auth else None
+        if browser_cdp_url:
+            CafeSDK.Log.info("Using CafeScraper fingerprint browser (CDP)")
+        else:
+            CafeSDK.Log.warn("PROXY_AUTH not set; falling back to local browser (may fail in cloud)")
 
         CafeSDK.Result.set_table_header(RESULT_TABLE_HEADERS)
 
@@ -88,8 +90,9 @@ async def run():
 
         await run_scraper(
             input_json_dict,
+            browser_cdp_url=browser_cdp_url,
             launch_browser_kwargs={"headless": True, "args": ["--disable-gpu"]},
-            proxy=proxy_url,
+            proxy=None,
             log=_CafeLogAdapter(),
             push_data=push_data,
         )
