@@ -3,3 +3,6 @@
 
 apify < 4.0.0
 playwright
+# CafeScraper worker SDK (root main.py)
+grpcio >= 1.74.0
+protobuf >= 4.21.0

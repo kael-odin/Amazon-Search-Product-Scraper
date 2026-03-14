@@ -1,0 +1,72 @@
+{
+  "title": "Amazon 搜索与商品抓取",
+  "type": "object",
+  "schemaVersion": 1,
+  "properties": {
+    "keywords": {
+      "title": "搜索关键词",
+      "type": "array",
+      "description": "要搜索的关键词列表，例如 [\"iphone 17 case\", \"usb c hub\"]",
+      "items": { "type": "string" },
+      "default": ["iphone 17 case"]
+    },
+    "max_items_per_keyword": {
+      "title": "每关键词最大商品数",
+      "type": "integer",
+      "description": "每个关键词最多抓取的商品数量",
+      "default": 50,
+      "minimum": 1,
+      "maximum": 500
+    },
+    "max_pages": {
+      "title": "每关键词最大页数",
+      "type": "integer",
+      "description": "每个关键词最多爬取的搜索结果页数 (1–20)",
+      "default": 3,
+      "minimum": 1,
+      "maximum": 20
+    },
+    "country": {
+      "title": "站点/国家",
+      "type": "string",
+      "description": "Amazon 站点: US, UK, DE, FR, JP",
+      "default": "US",
+      "enum": ["US", "UK", "DE", "FR", "JP"],
+      "enumTitles": ["美国", "英国", "德国", "法国", "日本"]
+    },
+    "min_rating": {
+      "title": "最低评分",
+      "type": "number",
+      "description": "过滤掉评分低于此值的商品，0 表示不限制",
+      "default": 0
+    },
+    "min_reviews": {
+      "title": "最低评论数",
+      "type": "integer",
+      "description": "过滤掉评论数少于此值的商品，0 表示不限制",
+      "default": 0,
+      "minimum": 0
+    },
+    "exclude_sponsored": {
+      "title": "排除赞助商品",
+      "type": "boolean",
+      "description": "为 true 时排除赞助商品",
+      "default": false
+    },
+    "fetch_details": {
+      "title": "抓取详情页",
+      "type": "boolean",
+      "description": "为 true 时对前 N 个商品打开详情页补充分类、特性等",
+      "default": false
+    },
+    "max_detail_items": {
+      "title": "每关键词详情页数量",
+      "type": "integer",
+      "description": "每个关键词最多打开详情页的商品数（仅当 fetch_details 为 true 时有效）",
+      "default": 5,
+      "minimum": 1,
+      "maximum": 50
+    }
+  },
+  "required": ["keywords"]
+}

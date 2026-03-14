@@ -1,6 +1,11 @@
 ## Amazon Search & Product Scraper (Python + Playwright)
 
-This Actor searches Amazon for given keywords and extracts product list data that is ready for analysis or export.
+This project can run as:
+
+1. **Apify Actor** – entry point `src/main.py` (use `apify run`).
+2. **CafeScraper Worker** – entry point **`main.py`** in project root; uses `sdk.py`, `sdk_pb2.py`, `sdk_pb2_grpc.py` for params, logging, and result push.
+
+The scraper searches Amazon for given keywords and extracts product list data that is ready for analysis or export.
 
 Typical use cases:
 
@@ -45,7 +50,7 @@ The dataset view is configured in `.actor/dataset_schema.json` so that the **Ove
 
 ### Running locally
 
-From the project root:
+**As Apify Actor** (from project root):
 
 ```bash
 apify run
@@ -53,6 +58,12 @@ apify run
 
 The default local input is stored in `storage/key_value_stores/default/INPUT.json`.  
 You can edit it to test different keywords, marketplaces and filters.
+
+**As CafeScraper Worker** (from project root):
+
+- Required files in root: `main.py`, `requirements.txt`, `input_schema.json`, `README.md`, `sdk.py`, `sdk_pb2.py`, `sdk_pb2_grpc.py`.
+- The platform supplies input via SDK and may set `PROXY_AUTH` for proxy; results are pushed via `CafeSDK.Result.set_table_header` and `CafeSDK.Result.push_data`.
+- Run: `python main.py` (with input/proxy provided by the CafeScraper environment).
 
 ### Anti‑bot considerations
 
