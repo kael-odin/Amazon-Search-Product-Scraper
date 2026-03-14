@@ -32,6 +32,10 @@ Each row includes: keyword, country, pageIndex, asin, title, productUrl, priceTe
 
 The platform runs `python main.py` and supplies input via the SDK. Proxy is optional via `PROXY_AUTH` (e.g. `socks5://{PROXY_AUTH}@proxy-inner.cafescraper.com:6000`).
 
+**Playwright browsers:** The script tries to run `playwright install chromium` once at start. If the run environment has no network or no write access to the cache dir, the platform must run `playwright install chromium` (or add a build step that does) before starting the task.
+
+**Minimal input:** If the platform only sends e.g. `{"version": "v1.0.1"}` or only a country, the worker uses default keywords and settings (see `DEFAULT_INPUT` in `main.py`). Full input can include: `keywords`, `country`, `max_pages`, `max_items_per_keyword`, `min_rating`, `min_reviews`, `exclude_sponsored`, `fetch_details`, `max_detail_items`.
+
 ## Anti-bot
 
 Amazon uses strong anti-bot measures. This worker uses a realistic browser profile and basic CAPTCHA detection. For production, use the platform’s proxy and keep concurrency low.

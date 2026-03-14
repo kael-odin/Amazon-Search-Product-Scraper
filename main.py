@@ -49,9 +49,26 @@ def _row_for_push(row: dict) -> dict:
     return {k: row.get(k) if isinstance(row.get(k), (list, dict, str, int, float, bool, type(None))) else str(row.get(k)) for k in HEADER_KEYS}
 
 
+# Defaults when platform sends minimal input (e.g. only version or country)
+DEFAULT_INPUT = {
+    "keywords": ["iphone 17 case"],
+    "max_items_per_keyword": 50,
+    "max_pages": 3,
+    "country": "US",
+    "min_rating": 0,
+    "min_reviews": 0,
+    "exclude_sponsored": False,
+    "fetch_details": False,
+    "max_detail_items": 5,
+}
+
+
 async def run():
     try:
-        input_json_dict = CafeSDK.Parameter.get_input_json_dict()
+        raw = CafeSDK.Parameter.get_input_json_dict() or {}
+        input_json_dict = {**DEFAULT_INPUT, **{k: v for k, v in raw.items() if k != "version"}}
+        if not raw.get("keywords"):
+            CafeSDK.Log.info("No keywords in input; using default keywords and settings.")
         CafeSDK.Log.debug(f"params: {input_json_dict}")
 
         proxy_domain = "proxy-inner.cafescraper.com:6000"

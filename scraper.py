@@ -323,8 +323,30 @@ async def run_scraper(
     launch_kwargs.setdefault("headless", True)
     launch_kwargs.setdefault("args", ["--disable-gpu"])
     locale = {"US": "en-US", "UK": "en-GB", "DE": "de-DE", "FR": "fr-FR", "JP": "ja-JP"}.get(parsed.country, "en-US")
+
+    # Ensure Playwright Chromium is installed (e.g. when platform only ran pip install)
+    import subprocess
+    import sys
+    try:
+        subprocess.run(
+            [sys.executable, "-m", "playwright", "install", "chromium"],
+            capture_output=True,
+            timeout=120,
+            check=False,
+        )
+    except Exception:
+        pass
+
     async with async_playwright() as p:
-        browser = await p.chromium.launch(**launch_kwargs)
+        try:
+            browser = await p.chromium.launch(**launch_kwargs)
+        except Exception as e:
+            err = str(e)
+            if "Executable doesn't exist" in err or "playwright install" in err.lower():
+                log.exception(
+                    "Playwright Chromium not found. The run environment must execute: playwright install chromium"
+                )
+            raise
         ctx_opts = {
             "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36",
             "locale": locale,
