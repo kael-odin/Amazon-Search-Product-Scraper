@@ -421,6 +421,8 @@ async def run_scraper(
             def debug(self, msg, exc_info=False): _log.debug(msg, exc_info=exc_info)
             def info(self, msg): _log.info(msg)
             def warning(self, msg): _log.warning(msg)
+            def warn(self, msg): _log.warning(msg)
+            def error(self, msg): _log.error(msg)
             def exception(self, msg):
                 import traceback
                 _log.error(f"{msg}\n{traceback.format_exc()}")

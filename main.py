@@ -41,6 +41,12 @@ class _CafeLogAdapter:
     def warning(self, msg: str):
         CafeSDK.Log.warn(msg)
 
+    def warn(self, msg: str):
+        CafeSDK.Log.warn(msg)
+
+    def error(self, msg: str):
+        CafeSDK.Log.error(msg)
+
     def exception(self, msg: str):
         import traceback
         CafeSDK.Log.error(f"{msg}\n{traceback.format_exc()}")
