@@ -361,8 +361,9 @@ async def _scrape_keyword(
                 break
             search_url = f"{base_url}{next_href}" if next_href.startswith("/") else next_href
             page_index += 1
-        except Exception:
-            log.exception(f'Failed scraping keyword="{keyword}" page={page_index}')
+        except Exception as e:
+            import traceback
+            log.exception(f'Failed scraping keyword="{keyword}" page={page_index}: {e}')
             break
         finally:
             await page.close()
@@ -384,7 +385,9 @@ async def run_scraper(
             def debug(self, msg, exc_info=False): _log.debug(msg, exc_info=exc_info)
             def info(self, msg): _log.info(msg)
             def warning(self, msg): _log.warning(msg)
-            def exception(self, msg): _log.exception(msg)
+            def exception(self, msg):
+                import traceback
+                _log.error(f"{msg}\n{traceback.format_exc()}")
         log = _LogAdapter()
     if push_data is None:
         push_data = lambda x: None
