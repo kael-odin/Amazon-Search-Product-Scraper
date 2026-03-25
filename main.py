@@ -76,7 +76,11 @@ async def run():
                 # stringList format: [{"string": "keyword"}]
                 raw["keywords"] = [x.get("string", "").strip() for x in kw if isinstance(x, dict) and x.get("string")]
         
-        input_json_dict = {**DEFAULT_INPUT, **{k: v for k, v in raw.items() if k != "version"}}
+        # Remove platform-injected fields that shouldn't be merged
+        raw.pop("string", None)
+        raw.pop("version", None)
+        
+        input_json_dict = {**DEFAULT_INPUT, **{k: v for k, v in raw.items()}}
         
         if not input_json_dict.get("keywords"):
             CafeSDK.Log.info("No keywords in input; using default keywords and settings.")
